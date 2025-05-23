@@ -8,6 +8,7 @@ class Notification(models.Model):
         ('document', 'Document'),
         ('case', 'Case'),
         ('invoice', 'Invoice'),
+        ("request", "Request"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')

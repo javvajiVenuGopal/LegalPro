@@ -42,7 +42,9 @@ export const Invoices: React.FC = () => {
         const response = await axios.get('http://127.0.0.1:7000/law/invoices/', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setInvoices(response.data);
+        console.log(response.data)
+        const lawyerInvoices = response.data.filter((invoice: Invoice) => invoice.lawyer === user?.id);
+      setInvoices(lawyerInvoices);
       } catch {
         setInvoices([]);
       } finally {

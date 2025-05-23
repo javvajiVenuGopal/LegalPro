@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import AcceptCase, CaseViewSet, CaseUpdateViewSet, AppointmentViewSet, DocumentViewSet, FolderViewSet, MessageViewSet, InvoiceViewSet, ThreadViewSet, download_file
+from .views import AcceptCase, CaseRequestViewSet, CaseViewSet, CaseUpdateViewSet, AppointmentViewSet, DocumentViewSet, FolderViewSet, MessageViewSet, InvoiceViewSet, ThreadViewSet, download_file
 
 router = DefaultRouter()
 router.register(r'cases', CaseViewSet)
@@ -11,7 +11,7 @@ router.register(r'folders', FolderViewSet, basename='folder')
 router.register(r'threads', ThreadViewSet)
 router.register(r'messages', MessageViewSet)
 router.register(r'invoices', InvoiceViewSet)
-
+router.register('case-requests', CaseRequestViewSet, basename='case-request')
 
 
 urlpatterns = [

@@ -23,8 +23,13 @@ import { ClientListPage } from './pages/lawyer/clientPage';
 import { ClientDetailPage } from './pages/lawyer/ClientDetailPage';
 import { CaseManagementPage } from './pages/lawyer/casemanagement';
 import { LawyerAnalyticsPage } from './pages/lawyer/lawyeranalyst';
-import PaymentPage from './pages/client/payment';
+import PaymentPage from './pages/payment/Pay';
 import { Profile } from './pages/profiler/profile';
+import LawyerProfile from './pages/profiler/lawyerprofiler';
+import { LawyerListPage } from './pages/client/lawyerlist';
+import { LawyerDetailPage } from './pages/client/lawyersingledetail';
+import LawyerCaseRequestsPage from './pages/request/request';
+import ClientProfile from './pages/profiler/clientprofiler';
 
 
 const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 'client' | 'lawyer' }) => {
@@ -47,7 +52,7 @@ function App() {
       <Routes>
         {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/profile/1" element={<Profile />} />
+        <Route path="/profile/:id" element={<LawyerProfile />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<div>Forgot Password Page (Coming Soon)</div>} />
 
@@ -58,9 +63,15 @@ function App() {
           </ProtectedRoute>
         }>
           <Route path="dashboard" element={<ClientDashboard />} />
+          <Route path="client/:id" element={<ClientProfile/>} />
+          <Route path="lawyers" element={<LawyerListPage />} />
+<Route path="lawyers/detail/:id" element={<LawyerDetailPage />} />
+
+          <Route path="lawyer/:id" element={<Profile />} />
           <Route path="cases" element={<CaseList/>} />
           <Route path="cases/:id" element={<CaseDetail />} />
           <Route path="messages" element={<Messages />} />
+          <Route path="request" element={<LawyerCaseRequestsPage />} />
           {/* <Route path="appointments" element={<Appointments />} /> */}
           {/* <Route path="documents" element={<Documents />} /> */}
           {/* <Route path="invoices" element={<Invoices />} />
@@ -83,6 +94,7 @@ function App() {
           <Route path="cases/:id" element={<CaseDetail />} />
           <Route path="messages" element={<Messages />} />
           <Route path="appointments" element={<Appointments />} />
+          <Route path="request" element={<LawyerCaseRequestsPage />} />
           {/* <Route path="analytics" element={<LawyerAnalyticsPage />} /> */}
           <Route path="documents" element={<Documents />} />
           <Route path="invoices" element={<Invoices />} />

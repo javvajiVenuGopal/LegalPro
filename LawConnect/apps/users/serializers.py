@@ -110,3 +110,17 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
+
+from rest_framework import serializers
+from .models import LawyerProfile
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+from rest_framework import serializers
+from .models import LawyerProfile
+
+class LawyerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LawyerProfile
+        fields = '__all__'

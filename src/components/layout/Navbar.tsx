@@ -156,10 +156,10 @@ export const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
             </div>
             
             {/* Messages (static for now) */}
-            <button className="relative p-2 rounded-full hover:bg-gray-100 text-gray-500">
+            {/* <button className="relative p-2 rounded-full hover:bg-gray-100 text-gray-500">
               <MessageSquare size={20} />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-error-500" />
-            </button>
+            </button> */}
 
             {/* User Dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -182,10 +182,10 @@ export const Navbar: React.FC<NavbarProps> = ({ toggleSidebar }) => {
                   </div>
                   
                   <Link 
-                    to="/profile" 
+                    to={user.role==='lawyer'?`/profile/${user.id}`:`client/${user.id}`} 
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setDropdownOpen(false)}
-                  >
+                  >e="
                     Profile Settings
                   </Link>
                   

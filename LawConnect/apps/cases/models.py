@@ -139,8 +139,31 @@ class Invoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
-
+    status= models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     def __str__(self):
         return f"Invoice #{self.id} for {self.case.title}"
 
 # Example: apps/messages/models.py
+# models.py
+
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class CaseRequest(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    )
+
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='case_requests_sent')
+    lawyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='case_requests_received')
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        return f"{self.client} -> {self.lawyer} | {self.status}"

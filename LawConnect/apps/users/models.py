@@ -25,7 +25,9 @@ class LawyerProfile(models.Model):
     license = models.CharField(max_length=100)
     firm = models.CharField(max_length=255)
     approved = models.BooleanField(default=False)
-
+    experience = models.IntegerField()
+    per_case_charge = models.DecimalField(max_digits=10, decimal_places=2)
+    bio=models.TextField(blank=True, null=True)
     def __str__(self):
         return f"Lawyer Profile for {self.user.username}"
 

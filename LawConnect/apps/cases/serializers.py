@@ -89,3 +89,17 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = '__all__'
+# serializers.py
+
+from rest_framework import serializers
+from .models import CaseRequest
+
+class CaseRequestSerializer(serializers.ModelSerializer):
+    client_name = serializers.CharField(source='client.username', read_only=True)
+    lawyer_name = serializers.CharField(source='lawyer.username', read_only=True)
+
+    class Meta:
+        model = CaseRequest
+        fields = '__all__'
+        read_only_fields = ['status', 'created_at']
+

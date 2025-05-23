@@ -297,7 +297,7 @@ const handleStartChat = async (participantId: string) => {
     }
     console.log(selectedThread)
   }, [selectedThread, fetchMessages]);
-
+const u=allUsers.find((u) => u.id === parseInt(selectedThread?.participant))
   useEffect(() => {
     const interval = setInterval(() => {
       fetchThreads();
@@ -371,7 +371,7 @@ const acceptedUsers = usersFromAcceptedThreads
 
 
           <div className="overflow-y-auto flex-1">
-  {filteredThreads.map((thread) => (
+  {/* {filteredThreads.map((thread) => (
     <button
       key={thread.id}
       onClick={() => {
@@ -386,19 +386,19 @@ const acceptedUsers = usersFromAcceptedThreads
       <div className="flex items-center">
         <Avatar name={getDisplayName(thread.participant!)} size="md" className="mr-3" />
         <div>
-          <div className="font-semibold">{getDisplayName(thread.participant!)}</div>
+          {/* <div className="font-semibold">{getDisplayName(thread.participant!)}</div>
           {/* Display case status */}
-          {thread.caseAccepted !== undefined && (
+          {/* {thread.caseAccepted !== undefined && (
             <p className="text-sm text-gray-500">
               {thread.caseAccepted
                 ? 'Case accepted'
                 : 'Case not accepted'}
             </p>
-          )}
-        </div>
+          )} 
+        </div> 
       </div>
     </button>
-  ))}
+  ))} */}
 </div>
 
         </div>
@@ -475,8 +475,8 @@ const acceptedUsers = usersFromAcceptedThreads
     <>
       <header className="border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Avatar name={getDisplayName(selectedThread.participant!)} size="md" />
-          <div className="font-semibold">{getDisplayName(selectedThread.participant!)}</div>
+          <Avatar name={getDisplayName(u)} size="md" />
+          <div className="font-semibold">{getDisplayName(u)}</div>
         </div>
         {/* Display case acceptance status in the header */}
         {selectedThread.caseAccepted !== undefined && (

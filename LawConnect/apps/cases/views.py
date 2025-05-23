@@ -4,7 +4,7 @@ from django.db.models import Q
 from rest_framework import viewsets
 
 
-from apps.users.models import User
+from apps.users.models import LawyerProfile, User
 from apps.notifications.signals import create_notification
 from .models import Case, CaseUpdate, Appointment, Document, Message, Invoice
 from .serializers import CaseSerializer, CaseUpdateSerializer, AppointmentSerializer, DocumentSerializer, MessageSerializer, InvoiceSerializer
@@ -140,31 +140,53 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def perform_create(self, serializer):
-        message = serializer.save(sender=self.request.user)
+        
+        message = serializer.save(client=self.request.user)
+        lawyer_id= self.request.data.get('lawyer')
+         # Retrieve the lawyer's profile to get the per_case_charge
+        lawyer_profile = get_object_or_404(LawyerProfile, user_id=lawyer_id)
+        
+        # Determine the status based on the per_case_charge
+        if message.amount >= lawyer_profile.per_case_charge:
+            message.status = 'paid'
+        else:
+            message.status = 'pending'
+        
+        # Save the updated invoice with the new status
+        message.save()
+        print(self.request.data)
+        user = User.objects.get(id=lawyer_id)
         # Create notification for recipient
-        create_notification(
-            user=message.recipient,
+        create_notification(user=user,
             notif_type='invoice',
             title='payment',
-            content=message.content[:100],
+            content="message credited",
             related_id=message.id
         )
 class AcceptCase(APIView):
-    
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request, case_id):
         case = get_object_or_404(Case, id=case_id)
-
+ # Get additional data from the request body if needed
+        
         if request.user.role != 'lawyer':
-            return Response({'error': 'Only a lawyer can accept a case.'}, status=status.HTTP_403_FORBIDDEN)
+            accepted_by_lawyer = request.data.get('accepted_by_lawyer', request.user.id)
+            lawyer_id = request.data.get('lawyer', request.user.id)
+            print(accepted_by_lawyer,lawyer_id)
+        else:
+            accepted_by_lawyer = request.user.id
+            lawyer_id = request.user.id
 
         if case.lawyer:
             return Response({'error': 'This case has already been accepted.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Assign lawyer and update status
-        case.lawyer = request.user
-        case.accepted_by_lawyer = request.user
+       
+
+        # Assign lawyer and update the case status
+        case.lawyer = lawyer_id
+        case.accepted_by_lawyer = accepted_by_lawyer
         case.status = 'in_review'
         case.save()
 
@@ -172,7 +194,7 @@ class AcceptCase(APIView):
         thread, created = Thread.objects.get_or_create(case=case)
         thread.participants.add(case.client, request.user)
 
-        # Notify client
+        # Notify the client about the case acceptance
         create_notification(
             user=case.client,
             notif_type='case',
@@ -186,37 +208,42 @@ class AcceptCase(APIView):
             'thread_id': thread.id,
             'thread_created': created
         }, status=status.HTTP_200_OK)
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, case_id):
+        # Assign lawyer and update status
         
-        case = get_object_or_404(Case, id=case_id)
 
-        if request.user.role != 'lawyer':
-            return JsonResponse({'error': 'Only a lawyer can accept a case.'}, status=status.HTTP_400_BAD_REQUEST)
+from rest_framework import viewsets, permissions
+from .models import CaseRequest
+from .serializers import CaseRequestSerializer
 
-        # Set the lawyer on the case
-        case.lawyer = request.user
-        case.accepted_by_lawyer = request.user
-        case.status = 'in_review'
-        case.save()
+class CaseRequestViewSet(viewsets.ModelViewSet):
+    queryset = CaseRequest.objects.all()
+    serializer_class = CaseRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-        # Create a chat thread for the case if it doesn't exist already
-        thread, created = Thread.objects.get_or_create(case=case)
-        thread.participants.add(request.user, case.client)
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name="lawyers").exists():
+            return CaseRequest.objects.filter(lawyer=user).order_by('-created_at')
+        return CaseRequest.objects.filter(client=user).order_by('-created_at')
 
-        # Create notification for the client
-        create_notification(
-            user=case.client,
-            notif_type='case',
-            title='Case Accepted',
-            content=f"Your case '{case.title}' was accepted by {request.user.get_full_name()}",
-            related_id=case.id
-        )
-
-        return JsonResponse({
-            'message': 'Case successfully accepted by lawyer',
-            'thread_id': thread.id,
-            'thread_created': created
-        }, status=status.HTTP_200_OK)
-
+    def perform_create(self, serializer):
+         # Get the currently authenticated user (client)
+        user = self.request.user
+        
+        # Get the lawyer ID from the request data
+        lawyer_id = self.request.data.get('lawyer')  # Get the lawyer ID from the request data
+        client_id = self.request.data.get('client')
+        # Ensure a lawyer ID is provided
+        if not lawyer_id:
+            raise ValueError("Lawyer ID is required.")
+        
+        try:
+            lawyer = User.objects.get(id=lawyer_id)  # Fetch the lawyer by the ID
+            client=User.objects.get(id=client_id)  # Fetch the client by the ID
+        except User.DoesNotExist:
+            raise ValueError("Lawyer with the given ID does not exist.")
+        print(lawyer,client)
+        # Save the case request with the client and lawyer
+        # Ensure the `client` is the current authenticated user
+        
+        serializer.save(client=client, lawyer=lawyer)

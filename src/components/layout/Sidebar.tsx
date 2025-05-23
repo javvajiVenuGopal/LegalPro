@@ -54,13 +54,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
   
   const clientItems = [
     { icon: <Home size={20} />, label: 'Dashboard', href: '/client/dashboard' },
+    { icon:<Home size={20} />, label: 'My Lawyers', href: '/client/lawyers' },
     { icon: <Briefcase size={20} />, label: 'My Cases', href: '/client/cases' },
     { icon: <MessageSquare size={20} />, label: 'Messages', href: '/client/messages' },
-    { icon: <Calendar size={20} />, label: 'Appointments', href: '/client/appointments' },
-    { icon: <FileText size={20} />, label: 'Documents', href: '/client/documents' },
-    { icon: <CreditCard size={20} />, label: 'Invoices', href: '/client/invoices' },
-    { icon: <Bell size={20} />, label: 'Notifications', href: '/client/notifications' },
-    { icon: <Settings size={20} />, label: 'Settings', href: '/client/settings' },
+    // { icon: <Calendar size={20} />, label: 'Appointments', href: '/client/appointments' },
+    // { icon: <FileText size={20} />, label: 'Documents', href: '/client/documents' },
+    // { icon: <CreditCard size={20} />, label: 'Invoices', href: '/client/invoices' },
+    // { icon: <Bell size={20} />, label: 'Notifications', href: '/client/notifications' },
+    // { icon: <Settings size={20} />, label: 'Settings', href: '/client/settings' },
+    {icon:<Home size={20} />, label: 'Request a Lawyer', href: '/client/request' },
+    
   ];
 
   const lawyerItems = [
@@ -71,9 +74,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar }) => {
     { icon: <Calendar size={20} />, label: 'Appointments', href: '/lawyer/appointments' },
     { icon: <FileText size={20} />, label: 'Documents', href: '/lawyer/documents' },
     { icon: <CreditCard size={20} />, label: 'Invoices', href: '/lawyer/invoices' },
-    { icon: <BarChart2 size={20} />, label: 'Analytics', href: '/lawyer/analytics' },
-    { icon: <Bell size={20} />, label: 'Notifications', href: '/lawyer/notifications' },
-    { icon: <Settings size={20} />, label: 'Settings', href: '/lawyer/settings' },
+    // { icon: <BarChart2 size={20} />, label: 'Analytics', href: '/lawyer/analytics' },
+    // { icon: <Bell size={20} />, label: 'Notifications', href: '/lawyer/notifications' },
+    // { icon: <Settings size={20} />, label: 'Settings', href: '/lawyer/settings' },
+    { icon: <Users size={20} />, label: 'requests', href: '/lawyer/request' },
   ];
 
   const navigationItems = isLawyer ? lawyerItems : clientItems;

@@ -5,15 +5,22 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 
+from apps.cases.models import Case
+from apps.cases.serializers import CaseSerializer
+
+from .permission import IsOwnerOrAdmin
+from apps.users.models import LawyerProfile
+
 
 User = get_user_model()
 
 # users/views.py
 
 from rest_framework.views import APIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserRegistrationSerializer
+from .serializers import  LawyerProfileSerializer, UserRegistrationSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -119,41 +126,84 @@ class LawyerListView(APIView):
         return Response(data)
 
 
+
+class LawyerDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def get(self, request, pk):
+        try:
+            # Get the lawyer's profile by user ID
+            lawyer_profile = LawyerProfile.objects.select_related('user').get(user__id=pk)
+            
+            # Fetch the closed cases for this lawyer where status is 'close'
+            closed_cases = Case.objects.filter(lawyer=lawyer_profile.user, status='close')
+        except LawyerProfile.DoesNotExist:
+            return Response({"error": "Lawyer not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Serialize the lawyer's profile and their closed cases
+        lawyer_serializer = LawyerProfileSerializer(lawyer_profile)
+        case_serializer = CaseSerializer(closed_cases, many=True)
+
+        data = {
+            "lawyer": lawyer_serializer.data,
+            "case_history": case_serializer.data  # Returning the closed case history
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        try:
+            lawyer = LawyerProfile.objects.select_related('user').get(user__id=pk)
+        except LawyerProfile.DoesNotExist:
+            return Response({"error": "Lawyer not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = LawyerProfileSerializer(lawyer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"lawyer": serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            lawyer = LawyerProfile.objects.select_related('user').get(user__id=pk)
+            lawyer.user.delete()
+        except LawyerProfile.DoesNotExist:
+            return Response({"error": "Lawyer not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Lawyer deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 class ClientDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
     def get(self, request, pk):
         try:
             client = User.objects.get(pk=pk, role='client')
         except User.DoesNotExist:
             return Response({"error": "Client not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
         data = {
             "id": client.id,
             "name": client.username,
             "email": client.email,
             "phone": getattr(client, "phone", ""),
             "role": client.role,
-            # Add more fields as needed
         }
         return Response({"client": data}, status=status.HTTP_200_OK)
 
-
-class LawyerDetailView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, pk):
+    def put(self, request, pk):
         try:
-            lawyer = User.objects.get(pk=pk, role='lawyer')
+            client = User.objects.get(pk=pk, role='client')
         except User.DoesNotExist:
-            return Response({"error": "Lawyer not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response({"error": "Client not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        for attr, value in request.data.items():
+            setattr(client, attr, value)
+        client.save()
+
         data = {
-            "id": lawyer.id,
-            "name": lawyer.username,
-            "email": lawyer.email,
-            "phone": getattr(lawyer, "phone", ""),
-            "role": lawyer.role,
-            # Add more fields as needed
+            "id": client.id,
+            "name": client.username,
+            "email": client.email,
+            "phone": getattr(client, "phone", ""),
+            "role": client.role,
         }
-        return Response({"lawyer": data}, status=status.HTTP_200_OK)
+        return Response({"client": data}, status=status.HTTP_200_OK)

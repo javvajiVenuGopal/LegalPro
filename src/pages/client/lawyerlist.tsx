@@ -1,150 +1,81 @@
-import React, { useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import Textarea from '../../components/ui/Textarea';
-import { Avatar } from '../../components/ui/Avatar';
+// LawyerListPage.tsx
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../../components/ui/Card';
+import { Avatar } from '../../components/ui/Avatar';
+import { Button } from '../../components/ui/Button';
+import { useAuthStore } from '../../store/authStore';
 
-export const Profile: React.FC = () => {
-  const { user, Token: token } = useAuthStore();
+export const LawyerListPage: React.FC = () => {
+  const token = useAuthStore(state => state.Token);
+  const [lawyers, setLawyers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!user) return null;
+  useEffect(() => {
+    const fetchLawyers = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:7000/users/lawyers/', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setLawyers(response.data);
+      } catch (error) {
+        console.error('Failed to fetch lawyers:', error);
+        setLawyers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const isLawyer = user.role === 'lawyer';
+    fetchLawyers();
+  }, [token]);
 
-  // Editable state
-  const [form, setForm] = useState({
-    name: user.name || '',
-    email: user.email || '',
-    phone: user.phone || '',
-    specialization: user.specialization || '',
-    license: user.license || '',
-    experience: user.experience || '',
-    bio: user.bio || '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [pw, setPw] = useState({ new: '', confirm: '' });
-  const [pwLoading, setPwLoading] = useState(false);
-
-  // Profile update handler
-  const handleUpdate = async () => {
-    setLoading(true);
+  const handleRequest = async (lawyerId: number) => {
     try {
-      await axios.put(
-        'http://127.0.0.1:7000/law/profile/',
-        form,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('Profile updated!');
-    } catch {
-      alert('Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
-  };
+      await axios.post(`http://127.0.0.1:7000/users/clients/request-lawyer/`, {
+        lawyer_id: lawyerId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-  // Password change handler
-  const handleChangePassword = async () => {
-    if (!pw.new || pw.new !== pw.confirm) {
-      alert('Passwords do not match');
-      return;
-    }
-    setPwLoading(true);
-    try {
-      await axios.post(
-        'http://127.0.0.1:7000/law/change-password/',
-        { password: pw.new },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert('Password changed!');
-      setPw({ new: '', confirm: '' });
-    } catch {
-      alert('Failed to change password');
-    } finally {
-      setPwLoading(false);
+      alert('Lawyer request sent successfully!');
+    } catch (error) {
+      console.error('Error requesting lawyer:', error);
+      alert('Failed to send request. Try again later.');
     }
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your personal information and account settings</p>
-      </div>
-
-      {/* Profile Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center space-x-4">
-            <Avatar name={form.name} size="lg" />
-            <div>
-              <p className="font-medium text-gray-900">{form.name}</p>
-              <p className="text-sm text-gray-600">{form.email}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input label="Full Name" id="fullname" type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-            <Input label="Email Address" id="email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-            <Input label="Phone Number" id="phone" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-
-            {isLawyer && (
-              <>
-                <Input label="Specialization" id="specialization" value={form.specialization} onChange={e => setForm(f => ({ ...f, specialization: e.target.value }))} />
-                <Input label="License Number" id="license" value={form.license} onChange={e => setForm(f => ({ ...f, license: e.target.value }))} />
-                <Input label="Years of Experience" id="experience" value={form.experience} onChange={e => setForm(f => ({ ...f, experience: e.target.value }))} />
-              </>
-            )}
-          </div>
-
-          <div>
-            <Textarea
-              label="About Me (For Clients)"
-              value={form.bio}
-              onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-              placeholder="Tell clients about your background, education, or areas of expertise..."
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleUpdate} disabled={loading}>
-              {loading ? 'Updating...' : 'Update Profile'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Account Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            label="New Password"
-            type="password"
-            placeholder="New password"
-            value={pw.new}
-            onChange={e => setPw(p => ({ ...p, new: e.target.value }))}
-          />
-          <Input
-            type="password"
-            placeholder="Confirm new password"
-            value={pw.confirm}
-            onChange={e => setPw(p => ({ ...p, confirm: e.target.value }))}
-          />
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={handleChangePassword} disabled={pwLoading}>
-              {pwLoading ? 'Changing...' : 'Change Password'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Available Lawyers</h1>
+      {loading ? (
+        <p>Loading lawyers...</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {lawyers.map(lawyer => (
+            <Card key={lawyer.id}>
+              <CardHeader>
+                <div className="flex items-center">
+                  <Avatar name={lawyer.name} size="sm" className="mr-3" />
+                  <CardTitle className="text-lg font-semibold">{lawyer.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-1">Email: {lawyer.email}</p>
+                <p className="text-sm text-gray-500">Specialty: {lawyer.specialization || 'N/A'}</p>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Link to={`detail/${lawyer.id}`}>
+                  <Button variant="ghost">View Profile</Button>
+                </Link>
+                <Button onClick={() => handleRequest(lawyer.id)}>Request Lawyer</Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

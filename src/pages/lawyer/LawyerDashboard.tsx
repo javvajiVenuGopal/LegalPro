@@ -50,6 +50,7 @@ export const LawyerDashboard: React.FC = () => {
         setClients(clientsRes.data);
         setCases(casesRes.data);
         setAppointments(apptRes.data);
+        
         setInvoices(invRes.data);
         setMessages(msgRes.data);
       } catch {
@@ -101,11 +102,11 @@ const handleAppointmentAction = async (appointmentId: number, newStatus: 'confir
   }
 };
 
-
+console.log('Pending appointments:', invoices);
 
   // Revenue stats
   const pendingRevenue = invoices
-    .filter(i => i.status === 'pending' || i.status === 'overdue')
+    .filter(i => i.status === 'pending' )
     .reduce((sum, invoice) => sum + invoice.amount, 0);
   
   const paidRevenue = invoices
